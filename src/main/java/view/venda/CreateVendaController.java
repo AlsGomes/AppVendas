@@ -21,6 +21,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.layout.VBox;
 import model.Produto;
 
 public class CreateVendaController implements Initializable {
@@ -38,12 +39,12 @@ public class CreateVendaController implements Initializable {
 		}
 	};
 
-	private final ObservableList<ItemVenda> carrinho = FXCollections.observableArrayList();
+	private final ObservableList<VBox> carrinho = FXCollections.observableArrayList();
 	private final ObservableList<Produto> produtos = FXCollections.observableArrayList();
 	private final DAO<Produto> daoProduto = new DAOImpl<Produto>();
 
 	@FXML
-	private JFXListView<ItemVenda> lst_Carrinho;
+	private JFXListView<VBox> lst_Carrinho;
 
 	@FXML
 	private JFXButton btn_Finalizar;
@@ -190,9 +191,9 @@ public class CreateVendaController implements Initializable {
 			}
 		});
 
-		carrinho.addListener(new ListChangeListener<ItemVenda>() {
+		carrinho.addListener(new ListChangeListener<VBox>() {
 			@Override
-			public void onChanged(Change<? extends ItemVenda> c) {
+			public void onChanged(Change<? extends VBox> c) {
 				if (c.next()) {
 					btn_Finalizar.setDisable(carrinho.isEmpty());
 				}
