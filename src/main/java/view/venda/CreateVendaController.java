@@ -96,8 +96,8 @@ public class CreateVendaController implements Initializable {
 	}
 
 	private void automate() {
-		txt_Funcionario.getValidators().add(reqFieldValidator);
 		txt_Buscar.getValidators().add(reqFieldValidator);
+		txt_Funcionario.getValidators().add(reqFieldValidator);		
 		txt_Preco.getValidators().add(doubleFieldValidator);
 		txt_Total.getValidators().add(doubleFieldValidator);
 		cbo_Produto.getValidators().add(reqFieldValidator);
