@@ -1,7 +1,10 @@
 package view.venda;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
@@ -19,9 +22,15 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import model.Produto;
 
 public class CreateVendaController implements Initializable {
@@ -39,12 +48,12 @@ public class CreateVendaController implements Initializable {
 		}
 	};
 
-	private final ObservableList<VBox> carrinho = FXCollections.observableArrayList();
+	private final ObservableList<ItemVenda> carrinho = FXCollections.observableArrayList();
 	private final ObservableList<Produto> produtos = FXCollections.observableArrayList();
 	private final DAO<Produto> daoProduto = new DAOImpl<Produto>();
 
 	@FXML
-	private JFXListView<VBox> lst_Carrinho;
+	private JFXListView<ItemVenda> lst_Carrinho;
 
 	@FXML
 	private JFXButton btn_Finalizar;
@@ -97,11 +106,11 @@ public class CreateVendaController implements Initializable {
 	}
 
 	private void automate() {
-		txt_Buscar.getValidators().add(reqFieldValidator);			
+		txt_Buscar.getValidators().add(reqFieldValidator);
 		txt_Preco.getValidators().add(doubleFieldValidator);
 		txt_Total.getValidators().add(doubleFieldValidator);
 		txt_Funcionario.getValidators().add(reqFieldValidator);
-		cbo_Produto.getValidators().add(reqFieldValidator);		
+		cbo_Produto.getValidators().add(reqFieldValidator);
 
 		btn_Buscar.setOnAction(e -> {
 			if (txt_Buscar.validate()) {
@@ -199,15 +208,91 @@ public class CreateVendaController implements Initializable {
 				}
 			}
 		});
+		btn_Finalizar.setDisable(carrinho.isEmpty());
 
-		lst_Carrinho.setExpanded(true);
-		lst_Carrinho.setVerticalGap(5d);
-		lst_Carrinho.setDepth(5);
+//		lst_Carrinho.setExpanded(true);
+//		lst_Carrinho.setVerticalGap(5d);
+//		lst_Carrinho.setDepth(5);
 		lst_Carrinho.setItems(carrinho);
+
+		Callback<ListView<ItemVenda>, ListCell<ItemVenda>> cb = new Callback<ListView<ItemVenda>, ListCell<ItemVenda>>() {
+			@Override
+			public ListCell<ItemVenda> call(ListView<ItemVenda> param) {				
+				ListCell<ItemVenda> cell = new ListCell<ItemVenda>() {
+					@Override
+					protected void updateItem(ItemVenda item, boolean empty) {
+						super.updateItem(item, empty);
+						setItem(item);
+						if (!empty) {
+							setGraphic(item);
+						} else {
+							setGraphic(null);
+						}
+					}
+				};
+
+				cell.setOnMouseClicked(e -> {
+					if (!cell.isEmpty() && e.getButton().equals(MouseButton.SECONDARY)) {
+						ContextMenu menu = new ContextMenu();
+						MenuItem itemRemover = new MenuItem("Remover");
+						itemRemover.setOnAction(ev -> {
+							carrinho.remove(cell.getItem());
+							menu.hide();
+						});
+
+						menu.getItems().add(itemRemover);
+						menu.show(cell, e.getScreenX(), e.getScreenY());
+					}
+				});
+				return cell;
+			}
+		};
+		
+		lst_Carrinho.setCellFactory(cb);
+
+//		lst_Carrinho.setCellFactory(lv -> {
+//			ListCell<ItemVenda> cell = new ListCell<ItemVenda>() {
+//				@Override
+//				protected void updateItem(ItemVenda item, boolean empty) {
+//					super.updateItem(item, empty);
+//					setItem(item);
+//					if (!empty) {
+//						setGraphic(item);
+//					} else {
+//						setGraphic(null);
+//					}
+//				}
+//			};
+//
+//			cell.setOnMouseClicked(e -> {
+//				if (!cell.isEmpty() && e.getButton().equals(MouseButton.SECONDARY)) {
+//					ContextMenu menu = new ContextMenu();
+//					MenuItem itemRemover = new MenuItem("Remover");
+//					itemRemover.setOnAction(ev -> {
+//						carrinho.remove(cell.getItem());
+//						menu.hide();
+//					});
+//
+//					menu.getItems().add(itemRemover);
+//					menu.show(cell, e.getScreenX(), e.getScreenY());
+//				}
+//			});
+//
+//			return cell;
+//		});
 
 		btn_InserirCarrinho.setOnAction(e -> {
 			if (itemValidado()) {
 				Produto produto = cbo_Produto.getSelectionModel().getSelectedItem();
+
+				List<ItemVenda> produtoIgual = carrinho.stream()
+						.filter(p -> produto.getCodigo() == p.getProduto().getCodigo()).collect(Collectors.toList());
+				if (!produtoIgual.isEmpty()) {
+					NotificationsMaker.popUpSimpleWarningNotification("Atenção",
+							"O produto já está no carrinho. Aumente a quantidade, se desejar.");
+					return;
+				}
+
 				int qntd = spn_Qntd.getValue();
 				double precoUnitario = produto.getPreco();
 				double precoTotal = precoUnitario * qntd;
@@ -219,8 +304,6 @@ public class CreateVendaController implements Initializable {
 				NotificationsMaker.popUpSimpleInformationNotification("Atenção", "Item Inválido");
 			}
 		});
-
-		btn_Finalizar.setDisable(carrinho.isEmpty());
 	}
 
 	private boolean itemValidado() {

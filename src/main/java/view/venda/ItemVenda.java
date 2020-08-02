@@ -14,16 +14,11 @@ import model.Produto;
 public class ItemVenda extends VBox {
 
 	private final Produto produto;
-	private final SimpleIntegerProperty qntd = new SimpleIntegerProperty();
-	private final IntegerProperty qntdProperty = new SimpleIntegerProperty();
-	private final SimpleDoubleProperty precoUnitario = new SimpleDoubleProperty();
-	private final DoubleProperty precoUnitarioProperty = new SimpleDoubleProperty();
-	private final SimpleDoubleProperty precoTotal = new SimpleDoubleProperty();
-	private final DoubleProperty precoTotalProeprty = new SimpleDoubleProperty();
-	private final SimpleDoubleProperty valorDesconto = new SimpleDoubleProperty();
-	private final DoubleProperty valorDescontoProperty = new SimpleDoubleProperty();
-	private final SimpleDoubleProperty precoCobrado = new SimpleDoubleProperty();
-	private final DoubleProperty precoCobradoProperty = new SimpleDoubleProperty();
+	private final IntegerProperty qntd = new SimpleIntegerProperty();
+	private final DoubleProperty precoUnitario = new SimpleDoubleProperty();
+	private final DoubleProperty precoTotal = new SimpleDoubleProperty();
+	private final DoubleProperty valorDesconto = new SimpleDoubleProperty();
+	private final DoubleProperty precoCobrado = new SimpleDoubleProperty();
 
 	public ItemVenda(Produto produto, int qntd, double precoUnitario, double precoTotal, double valorDesconto,
 			double precoCobrado) {
@@ -42,44 +37,44 @@ public class ItemVenda extends VBox {
 		return produto;
 	}
 
-	public SimpleIntegerProperty getQntd() {
+	public IntegerProperty getQntdProperty() {
 		return qntd;
 	}
 
-	public IntegerProperty getQntdProperty() {
-		return qntdProperty;
-	}
-
-	public SimpleDoubleProperty getPrecoUnitario() {
-		return precoUnitario;
+	public Integer getQntd() {
+		return qntd.getValue();
 	}
 
 	public DoubleProperty getPrecoUnitarioProperty() {
-		return precoUnitarioProperty;
+		return precoUnitario;
 	}
 
-	public SimpleDoubleProperty getPrecoTotal() {
+	public Double getPrecoUnitario() {
+		return precoUnitario.getValue();
+	}
+
+	public DoubleProperty getPrecoTotalProperty() {
 		return precoTotal;
 	}
 
-	public DoubleProperty getPrecoTotalProeprty() {
-		return precoTotalProeprty;
-	}
-
-	public SimpleDoubleProperty getValorDesconto() {
-		return valorDesconto;
+	public Double getPrecoTotal() {
+		return precoTotal.getValue();
 	}
 
 	public DoubleProperty getValorDescontoProperty() {
-		return valorDescontoProperty;
+		return valorDesconto;
 	}
 
-	public SimpleDoubleProperty getPrecoCobrado() {
-		return precoCobrado;
+	public Double getValorDesconto() {
+		return valorDesconto.getValue();
 	}
 
 	public DoubleProperty getPrecoCobradoProperty() {
-		return precoCobradoProperty;
+		return precoCobrado;
+	}
+
+	public Double getPrecoCobrado() {
+		return precoCobrado.getValue();
 	}
 
 	@Override
@@ -89,30 +84,28 @@ public class ItemVenda extends VBox {
 	}
 
 	private void initListeners() {
-		this.qntdProperty.addListener((observable, oldValue, newValue) -> {
-			System.out.println("Tá alterando");
-			this.precoTotal.setValue((int) newValue * this.precoUnitario.getValue());
-			this.precoCobrado.setValue(this.precoTotal.getValue() - this.getValorDesconto().getValue());
+		getQntdProperty().addListener((observable, oldValue, newValue) -> {
+			getPrecoTotalProperty().setValue((int) newValue * getPrecoUnitario());
+			getPrecoCobradoProperty().setValue(getPrecoTotal() - getValorDesconto());
 		});
 	}
 
 	private void configViewer() {
 		HBox containerProduto = new HBox();
-		Text titleProduto = new Text("Produto");		
-		Text valueProduto = new Text(produto.getNome());		
+		Text titleProduto = new Text("Produto: ");
+		Text valueProduto = new Text(produto.getNome());
 		containerProduto.getChildren().addAll(titleProduto, valueProduto);
 
 		HBox containerQntd = new HBox();
-		Text titleQntd = new Text("Qntd");
-		Text valueQntd = new Text(String.valueOf(this.getQntd().getValue()));
-		
-//		valueQntd.textProperty().bind(this.getQntdProperty().asString());
-		
+		Text titleQntd = new Text("Qntd: ");
+		Text valueQntd = new Text(String.valueOf(getQntd()));
+		valueQntd.textProperty().bind(getQntdProperty().asString());
 		containerQntd.getChildren().addAll(titleQntd, valueQntd);
 
 		HBox containerPrecoCobrado = new HBox();
-		Text titlePrecoCobrado = new Text("Preço Cobrado");
-		Text valuePrecoCobrado = new Text(String.valueOf(this.getPrecoCobrado().getValue()));
+		Text titlePrecoCobrado = new Text("Preço Cobrado: ");
+		Text valuePrecoCobrado = new Text(String.format("%.2f", getPrecoCobrado()));
+		valuePrecoCobrado.textProperty().bind(getPrecoCobradoProperty().asString());
 		containerPrecoCobrado.getChildren().addAll(titlePrecoCobrado, valuePrecoCobrado);
 
 		HBox buttons = new HBox();
@@ -120,7 +113,7 @@ public class ItemVenda extends VBox {
 		JFXButton diminuirQntd = new JFXButton("-");
 		aumentarQntd.setOnAction(e -> {
 			if (this.qntd.getValue() < this.produto.getQntd()) {
-				this.qntd.setValue(this.qntd.getValue() + 1);				
+				this.qntd.setValue(this.qntd.getValue() + 1);
 			}
 		});
 		diminuirQntd.setOnAction(e -> {
