@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 import com.jfoenix.controls.JFXButton;
@@ -12,11 +13,14 @@ import com.jfoenix.controls.JFXListView;
 import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 
+import control.support.AlertMaker;
 import control.support.CustomFieldValidator;
 import control.support.CustomValidation;
 import control.support.NotificationsMaker;
 import dao.DAO;
 import dao.DAOImpl;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -30,7 +34,9 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
+import model.Funcionario;
 import model.Produto;
 
 public class CreateVendaController implements Initializable {
@@ -51,6 +57,9 @@ public class CreateVendaController implements Initializable {
 	private final ObservableList<ItemVenda> carrinho = FXCollections.observableArrayList();
 	private final ObservableList<Produto> produtos = FXCollections.observableArrayList();
 	private final DAO<Produto> daoProduto = new DAOImpl<Produto>();
+	private final DAO<Funcionario> daoFuncionario = new DAOImpl<Funcionario>();
+	private Funcionario funcionarioCompra = null;
+	private final DoubleProperty valorTotal = new SimpleDoubleProperty();
 
 	@FXML
 	private JFXListView<ItemVenda> lst_Carrinho;
@@ -86,6 +95,9 @@ public class CreateVendaController implements Initializable {
 	private JFXTextField txt_Estoque;
 
 	@FXML
+	private Text txt_ValorTotal;
+
+	@FXML
 	private JFXTextField txt_Preco;
 
 	@FXML
@@ -112,17 +124,20 @@ public class CreateVendaController implements Initializable {
 		txt_Funcionario.getValidators().add(reqFieldValidator);
 		cbo_Produto.getValidators().add(reqFieldValidator);
 
+		txt_ValorTotal.textProperty().bind(valorTotal.asString());
+
 		btn_Buscar.setOnAction(e -> {
 			if (txt_Buscar.validate()) {
 				produtos.clear();
 				String sql;
 				String buscar = txt_Buscar.getText();
-				if (CustomFieldValidator.isNumber(txt_Buscar.getText(), true, false)) {
+				if (CustomFieldValidator.isNumber(txt_Buscar.getText(), false, false)) {
 					sql = "from Produto p where (p.nome like '%" + buscar + "%' or p.codigo = " + buscar
 							+ ") order by p.nome";
 				} else {
 					sql = "from Produto p where p.nome like '%" + buscar + "%' order by p.nome";
 				}
+				System.out.println(sql);
 				produtos.addAll(daoProduto.select(sql, Produto.class));
 				cbo_Produto.setItems(produtos);
 				if (produtos.size() == 1) {
@@ -215,9 +230,29 @@ public class CreateVendaController implements Initializable {
 //		lst_Carrinho.setDepth(5);
 		lst_Carrinho.setItems(carrinho);
 
+		carrinho.addListener(new ListChangeListener<ItemVenda>() {
+			@Override
+			public void onChanged(Change<? extends ItemVenda> c) {
+				if (c.next()) {
+					if (c.wasAdded()) {
+						c.getAddedSubList().get(0).getPrecoCobradoProperty()
+								.addListener((observable, oldValue, newValue) -> {
+									valorTotal.setValue(carrinho.stream().mapToDouble(v -> v.getPrecoCobrado()).sum());
+								});
+
+						valorTotal.setValue(carrinho.stream().mapToDouble(v -> v.getPrecoCobrado()).sum());
+					}
+
+					if (c.wasRemoved()) {
+						valorTotal.setValue(carrinho.stream().mapToDouble(v -> v.getPrecoCobrado()).sum());
+					}
+				}
+			}
+		});
+
 		Callback<ListView<ItemVenda>, ListCell<ItemVenda>> cb = new Callback<ListView<ItemVenda>, ListCell<ItemVenda>>() {
 			@Override
-			public ListCell<ItemVenda> call(ListView<ItemVenda> param) {				
+			public ListCell<ItemVenda> call(ListView<ItemVenda> param) {
 				ListCell<ItemVenda> cell = new ListCell<ItemVenda>() {
 					@Override
 					protected void updateItem(ItemVenda item, boolean empty) {
@@ -247,7 +282,7 @@ public class CreateVendaController implements Initializable {
 				return cell;
 			}
 		};
-		
+
 		lst_Carrinho.setCellFactory(cb);
 
 //		lst_Carrinho.setCellFactory(lv -> {
@@ -304,6 +339,23 @@ public class CreateVendaController implements Initializable {
 				NotificationsMaker.popUpSimpleInformationNotification("Atenção", "Item Inválido");
 			}
 		});
+
+		btn_Descartar.setOnAction(e -> {
+			if (AlertMaker.popUpSimpleYesNoAlert("Compra de Produtos", null,
+					"Deseja descartar essa compra?") == AlertMaker.YES) {
+				btn_Descartar.getScene().getWindow().hide();
+			}
+		});
+
+		btn_Finalizar.setOnAction(e -> {
+			if (compraValidada()) {
+				if (AlertMaker.popUpSimpleYesNoAlert("Compra de Produtos", null, String.format(
+						"Deseja finalizar a compra no valor total de %.2f?", valorTotal.getValue())) == AlertMaker.NO) {
+					return;
+				}
+
+			}
+		});
 	}
 
 	private boolean itemValidado() {
@@ -322,6 +374,30 @@ public class CreateVendaController implements Initializable {
 		if (!txt_Total.validate()) {
 			return false;
 		}
+
+		return true;
+	}
+
+	private boolean compraValidada() {
+		if (!txt_Funcionario.validate()) {
+			return false;
+		}
+
+		String sql;
+		String buscar = txt_Funcionario.getText();
+		if (CustomFieldValidator.isNumber(buscar, false, false)) {
+			sql = "from Funcionario f where (f.nome like '" + buscar + "' or f.codigo = " + buscar + ")";
+		} else {
+			sql = "from Funcionario f where f.nome like '" + buscar + "'";
+		}
+
+		funcionarioCompra = null;
+		List<Funcionario> list = daoFuncionario.select(sql, Funcionario.class);
+		if (list.isEmpty()) {
+			NotificationsMaker.popUpSimpleErrorNotification("Compra de Produtos", "Funcionário não encontrado");
+			return false;
+		}
+		funcionarioCompra = list.get(0);
 
 		return true;
 	}

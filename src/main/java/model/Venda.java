@@ -1,20 +1,19 @@
 package model;
 
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -25,30 +24,40 @@ public class Venda implements Model {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long codigo;
+	private Long codigo;
 
 	@Column(nullable = false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date dataHora;
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-	@JoinTable(name = "tbl_vendas_x_produtos", joinColumns = {
-			@JoinColumn(name = "codigo_venda") }, inverseJoinColumns = { @JoinColumn(name = "codigo_produto") })
-	private List<Produto> produtos = new LinkedList<Produto>();
+	@OneToMany(mappedBy = "codigo.venda")
+	private Set<ItemVenda> items = new HashSet<ItemVenda>();
 
 	@ManyToOne(cascade = { CascadeType.MERGE })
-	//@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+	// @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
 	@JoinColumn(nullable = false, name = "id_funcionario")
 	private Funcionario funcionario;
+
+	@Column(nullable = false)
+	private double valorTotal;
 
 	public Venda() {
 	}
 
-	public long getCodigo() {
+	public Venda(long codigo, Date dataHora, Set<ItemVenda> items, Funcionario funcionario, double valorTotal) {
+		super();
+		this.codigo = codigo;
+		this.dataHora = dataHora;
+		this.items = items;
+		this.funcionario = funcionario;
+		this.valorTotal = valorTotal;
+	}
+
+	public Long getCodigo() {
 		return codigo;
 	}
 
-	public void setCodigo(long codigo) {
+	public void setCodigo(Long codigo) {
 		this.codigo = codigo;
 	}
 
@@ -60,14 +69,6 @@ public class Venda implements Model {
 		this.dataHora = dataHora;
 	}
 
-	public List<Produto> getProdutos() {
-		return produtos;
-	}
-
-	public void setProdutos(List<Produto> produtos) {
-		this.produtos = produtos;
-	}
-
 	public Funcionario getFuncionario() {
 		return funcionario;
 	}
@@ -75,4 +76,39 @@ public class Venda implements Model {
 	public void setFuncionario(Funcionario funcionario) {
 		this.funcionario = funcionario;
 	}
+
+	public double getValorTotal() {
+		return valorTotal;
+	}
+
+	public void setValorTotal(double valorTotal) {
+		this.valorTotal = valorTotal;
+	}
+
+	public Set<ItemVenda> getItems() {
+		return items;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (codigo ^ (codigo >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Venda other = (Venda) obj;
+		if (codigo != other.codigo)
+			return false;
+		return true;
+	}
+
 }

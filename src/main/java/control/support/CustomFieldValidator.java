@@ -158,20 +158,19 @@ public class CustomFieldValidator extends ValidatorBase {
 	 */
 	public static boolean isNumber(String value, boolean acceptDot, boolean acceptNullOrEmpty) {
 		if (value != null && !value.isEmpty()) {
-			String ultimaLetra = value.substring(value.length() - 1);
-			if (acceptDot) {
-				if (!ultimaLetra.matches("[0-9]") && !ultimaLetra.equals(".")) {
-					return false;
+			for (int i = 1; i <= value.length(); i++) {
+				String letra = value.substring(i - 1, i);
+				if (acceptDot) {
+					if (!letra.matches("[0-9]") && !letra.equals(".")) {
+						return false;
+					}
 				} else {
-					return true;
-				}
-			} else {
-				if (!ultimaLetra.matches("[0-9]")) {
-					return false;
-				} else {
-					return true;
+					if (!letra.matches("[0-9]")) {
+						return false;
+					}
 				}
 			}
+			return true;
 		} else {
 			return acceptNullOrEmpty;
 		}
