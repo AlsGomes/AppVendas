@@ -1,8 +1,8 @@
 package model;
 
-import java.util.Date;
+import java.io.Serializable;
+import java.time.Instant;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -15,20 +15,18 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 @Entity
 @Table(name = "tbl_vendas")
-public class Venda implements Model {
+public class Venda implements Model, Serializable {
+	private static final long serialVersionUID = 1L;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long codigo;
 
 	@Column(nullable = false)
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date dataHora;
+	private Instant dataHora;
 
 	@OneToMany(mappedBy = "codigo.venda")
 	private Set<ItemVenda> items = new HashSet<ItemVenda>();
@@ -38,19 +36,13 @@ public class Venda implements Model {
 	@JoinColumn(nullable = false, name = "id_funcionario")
 	private Funcionario funcionario;
 
-	@Column(nullable = false)
-	private double valorTotal;
-
 	public Venda() {
 	}
 
-	public Venda(long codigo, Date dataHora, Set<ItemVenda> items, Funcionario funcionario, double valorTotal) {
-		super();
+	public Venda(Long codigo, Instant dataHora, Funcionario funcionario) {
 		this.codigo = codigo;
 		this.dataHora = dataHora;
-		this.items = items;
 		this.funcionario = funcionario;
-		this.valorTotal = valorTotal;
 	}
 
 	public Long getCodigo() {
@@ -61,11 +53,11 @@ public class Venda implements Model {
 		this.codigo = codigo;
 	}
 
-	public Date getDataHora() {
+	public Instant getDataHora() {
 		return dataHora;
 	}
 
-	public void setDataHora(Date dataHora) {
+	public void setDataHora(Instant dataHora) {
 		this.dataHora = dataHora;
 	}
 
@@ -75,14 +67,6 @@ public class Venda implements Model {
 
 	public void setFuncionario(Funcionario funcionario) {
 		this.funcionario = funcionario;
-	}
-
-	public double getValorTotal() {
-		return valorTotal;
-	}
-
-	public void setValorTotal(double valorTotal) {
-		this.valorTotal = valorTotal;
 	}
 
 	public Set<ItemVenda> getItems() {

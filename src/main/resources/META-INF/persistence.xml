@@ -12,6 +12,7 @@
 		<class>model.Produto</class>
 		<class>model.Venda</class>
 		<class>model.Funcionario</class>
+		<class>model.ItemVenda</class>
 
 		<properties>
 			<property name="javax.persistence.jdbc.url"	value="jdbc:mysql://localhost:3306/bdVendas?createDatabaseIfNotExist=true" />

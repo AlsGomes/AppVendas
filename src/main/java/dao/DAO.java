@@ -7,6 +7,8 @@ import model.Model;
 public interface DAO<T extends Model> {
 
 	public boolean persist(T object);
+	
+	public boolean persistAll(List<T> object);
 
 	public boolean merge(T object, Class<T> classe, long id);
 

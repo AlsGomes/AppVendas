@@ -57,6 +57,27 @@ public class DAOImpl<T extends Model> implements DAO<T> {
 	}
 
 	@Override
+	public boolean persistAll(List<T> objects) {
+		EntityManager em = getEM();
+
+		try {
+			em.getTransaction().begin();
+			for (T t : objects) {
+				em.persist(t);
+			}
+			em.getTransaction().commit();
+			return true;
+		} catch (Exception e) {
+			System.out.println("PERSIST: " + e.getMessage());
+			e.printStackTrace();
+			em.getTransaction().rollback();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
+
+	@Override
 	public boolean merge(T object, Class<T> classe, long id) {
 		EntityManager em = getEM();
 

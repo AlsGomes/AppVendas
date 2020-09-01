@@ -1,5 +1,7 @@
 package model;
 
+import java.io.Serializable;
+
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -8,7 +10,8 @@ import model.pk.ItemVendaPK;
 
 @Entity
 @Table(name = "tbl_vendas_x_produtos")
-public class ItemVenda {
+public class ItemVenda implements Model, Serializable {
+	private static final long serialVersionUID = 1L;
 
 	@EmbeddedId
 	private ItemVendaPK codigo = new ItemVendaPK();
@@ -24,7 +27,6 @@ public class ItemVenda {
 
 	public ItemVenda(Produto produto, Venda venda, Integer qntd, Double precoUnitario, Double precoTotal,
 			Double valorDesconto, Double precoCobrado) {
-		super();
 		this.qntd = qntd;
 		this.precoUnitario = precoUnitario;
 		this.precoTotal = precoTotal;
@@ -99,7 +101,7 @@ public class ItemVenda {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(Object obj) {	
 		if (this == obj)
 			return true;
 		if (obj == null)

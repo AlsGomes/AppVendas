@@ -1,10 +1,10 @@
 package view.venda;
 
 import java.net.URL;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.function.Predicate;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 import com.jfoenix.controls.JFXButton;
@@ -38,6 +38,7 @@ import javafx.scene.text.Text;
 import javafx.util.Callback;
 import model.Funcionario;
 import model.Produto;
+import model.Venda;
 
 public class CreateVendaController implements Initializable {
 
@@ -354,6 +355,19 @@ public class CreateVendaController implements Initializable {
 					return;
 				}
 
+				Venda venda = new Venda(null, Instant.now(), funcionarioCompra);
+				DAO<Venda> daoVenda = new DAOImpl<Venda>();
+				daoVenda.persist(venda);
+
+				List<model.ItemVenda> items = new ArrayList<model.ItemVenda>();
+				carrinho.forEach(i -> {
+					items.add(new model.ItemVenda(i.getProduto(), venda, i.getQntd(), i.getPrecoUnitario(),
+							i.getPrecoTotal(), i.getValorDesconto(), i.getPrecoCobrado()));
+				});
+				DAO<model.ItemVenda> daoItemVenda = new DAOImpl<model.ItemVenda>();
+				daoItemVenda.persistAll(items);
+
+				NotificationsMaker.popUpSimpleInformationNotification("Venda", "Venda efetuada com sucesso!");
 			}
 		});
 	}
