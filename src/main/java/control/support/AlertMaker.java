@@ -31,4 +31,12 @@ public class AlertMaker {
 			return NO;
 		}
 	}
+
+	public static void popUpSimpleAlert(String title, String header, String content, AlertType type) {
+		Alert alert = new Alert(type);
+		alert.setTitle(title);
+		alert.setHeaderText(header);
+		alert.setContentText(content);
+		alert.show();
+	}
 }
